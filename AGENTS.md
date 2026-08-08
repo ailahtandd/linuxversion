@@ -121,3 +121,74 @@ Unless instructed otherwise, the agent should:
 6. Run `swift build` to verify compilation.
 7. Commit with a conventional-style English message.
 8. Report what changed, what was verified, and what still requires manual testing.
+
+## Linux Port Exception
+
+A cross-platform Linux port is being developed as an explicit exception to the
+macOS-only Product Boundary above.
+
+The existing Swift/AppKit/SwiftUI application remains the reference macOS
+implementation and must not be removed, replaced, or broken.
+
+Linux port code must be isolated from the existing macOS implementation.
+
+For the Linux port:
+
+- Target Linux first, with architecture suitable for future Windows support.
+- Use Tauri 2 for the desktop application shell.
+- Use Rust for backend/platform services.
+- Use React + TypeScript for the frontend.
+- Use xterm.js for terminal rendering.
+- Use a real PTY implementation in Rust.
+- Use PixiJS where beneficial for the infinite canvas.
+- Use Tokio for asynchronous backend services.
+- Use Serde for serialization.
+- Use Unix Domain Sockets for local IPC on Linux.
+
+The existing macOS implementation is the behavioral and compatibility reference.
+
+Do not attempt to make AppKit, SwiftUI, SwiftTerm, WKWebView, Network.framework,
+Metal, Sparkle, or other Apple-specific UI/platform code compile on Linux.
+
+Instead, reproduce the observable behavior using cross-platform components.
+
+The Linux port must preserve compatibility with the existing workspace schema,
+including `schemaVersion: 2`, `CanvasNode`, `NodeContent`, `WorkspaceDocument`,
+node frame encoding, terminal identity, and inter-agent communication semantics.
+
+Do not modify existing serialized field names or types merely to make the Rust
+implementation cleaner.
+
+Existing macOS-specific engineering rules apply only to the macOS implementation.
+For example:
+
+- `@MainActor`
+- `@Observable`
+- `NSView`
+- `NSViewRepresentable`
+- SwiftUI property rules
+
+do not apply to the Linux React/Rust implementation.
+
+Linux-specific code should live outside `Sources/`.
+
+Preferred location:
+
+apps/desktop/
+
+Before implementing the Linux application, inspect and document the existing
+macOS behavior and compatibility contracts.
+
+Linux port priorities are:
+
+1. Workspace compatibility
+2. PTY/terminal correctness
+3. Agent orchestration
+4. Reliability
+5. Maintainable architecture
+6. Linux usability
+7. Performance
+8. Visual parity
+
+Do not delete or substantially refactor the existing macOS implementation as
+part of the Linux port unless explicitly requested
